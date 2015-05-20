@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="geogig"
+            id="com.camptocamp.sbb">
+      </category>
+      <view
+            name="Branches"
+            icon="icons/sample.gif"
+            category="com.camptocamp.sbb"
+            class="com.camptocamp.sbb.views.BranchView"
+            id="com.camptocamp.sbb.views.BranchView">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="com.camptocamp.sbb.SBBPerspectiveFactory1"
+            fixed="true"
+            id="com.camptocamp.sbb.perspective1"
+            name="SBB">
+      </perspective>
+   </extension>
+
+</plugin>

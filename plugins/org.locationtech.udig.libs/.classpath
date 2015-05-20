@@ -1,5 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="lib/compress-lzf-1.0.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/geogig-bdbje-1.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/geogig-cli-1.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/geogig-core-1.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/geogig-geotools-1.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/geogig-metrics-1.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/geogig-mongodb-1.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/geogig-sqlite-core-1.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/geogig-sqlite-xerial-1.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/gson-2.2.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/gt-jdbc-spatialite-11.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/guava-17.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/guice-3.0-no_aop.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/guice-multibindings-3.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/javax.inject-1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jcommander-1.35.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jsr305-2.0.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jul-to-slf4j-1.7.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/logback-classic-1.1.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/logback-core-1.1.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/mongo-java-driver-2.12.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/py4j-0.8.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/spatialite-jdbc-3.7.2-2.4.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sqlite-jdbc-3.7.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/xpp3_min-1.1.4c.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src"/>
@@ -168,6 +193,5 @@
 	<classpathentry exported="true" kind="lib" path="lib/xml-commons-resolver-1.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/xmlrpc-common-3.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/xmlrpc-client-3.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib" sourcepath="lib"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
