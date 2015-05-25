@@ -127,15 +127,16 @@ public class CatalogPlugin extends Plugin {
         // ensure a preference store is around so we can save to it in the shutdown hook
         preferenceStore = new ScopedPreferenceStore(new InstanceScope(), getBundle().getSymbolicName());
 
-        try {
-            if (Display.getCurrent() != null) {
-                CatalogPlugin.trace("Restoring Local Catalog", null);
-            }
-            plugin.restoreFromPreferences();
-        } catch (Throwable e) {
-            CatalogPlugin.log("Unable to restore catalog:"+e, e);
-            handlerLoadingError(e);
-        }
+//        Comment out for demo
+//        try {
+//            if (Display.getCurrent() != null) {
+//                CatalogPlugin.trace("Restoring Local Catalog", null);
+//            }
+//            plugin.restoreFromPreferences();
+//        } catch (Throwable e) {
+//            CatalogPlugin.log("Unable to restore catalog:"+e, e);
+//            handlerLoadingError(e);
+//        }
         addSaveLocalCatalogShutdownHook();
     }
 

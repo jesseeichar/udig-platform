@@ -54,6 +54,7 @@ import org.locationtech.udig.project.ui.internal.commands.draw.DrawFeatureComman
 import org.locationtech.udig.project.ui.render.displayAdapter.ViewportPane;
 import org.locationtech.udig.project.ui.tool.IMapEditorSelectionProvider;
 import org.locationtech.udig.project.ui.tool.IToolManager;
+import org.locationtech.udig.project.ui.tool.ModalTool;
 import org.locationtech.udig.project.ui.viewers.MapEditDomain;
 import org.locationtech.udig.project.ui.viewers.MapViewer;
 import org.locationtech.udig.ui.CRSChooserDialog;
@@ -65,7 +66,6 @@ import org.locationtech.udig.ui.ShutdownTaskList;
 import org.locationtech.udig.ui.UDIGDragDropUtilities;
 import org.locationtech.udig.ui.UDIGDragDropUtilities.DragSourceDescriptor;
 import org.locationtech.udig.ui.UDIGDragDropUtilities.DropTargetDescriptor;
-
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -736,6 +736,11 @@ public class MapEditorWithPalette extends GraphicalEditorWithFlyoutPalette imple
 
         runMapClosingInterceptors();
 
+		IToolManager toolManager = ApplicationGIS.getToolManager();
+		ModalTool zoomTool = (ModalTool)toolManager.findTool("org.locationtech.udig.tools.Zoom");
+		if (!zoomTool.isActive()) {
+			toolManager.getToolAction("org.locationtech.udig.tools.Zoom", "org.locationtech.udig.tool.category.zoom").run();
+		}
         deregisterFeatureFlasher();
         getSite().getPage().removePartListener(partlistener);
         if( viewer != null ){

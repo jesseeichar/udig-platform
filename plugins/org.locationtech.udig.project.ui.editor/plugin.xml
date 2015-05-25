@@ -252,10 +252,6 @@
          </action>
       </extension>
       
-   <extension
-         point="org.eclipse.ui.startup">
-      <startup class="org.locationtech.udig.project.ui.internal.StartupOpenMaps"/>
-   </extension>
    
    <extension
          id="org.locationtech.udig.project.ui.map"

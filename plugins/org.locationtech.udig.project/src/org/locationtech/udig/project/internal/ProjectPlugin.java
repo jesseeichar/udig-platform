@@ -153,44 +153,7 @@ public final class ProjectPlugin extends EMFPlugin {
          */
         public void start(BundleContext context) throws Exception {
             super.start(context);
-            ShutdownTaskList.instance().addPostShutdownTask(new PostShutdownTask() {
-
-                public int getProgressMonitorSteps() {
-                    List<Resource> resources = getProjectRegistry().eResource().getResourceSet()
-                            .getResources();
-                    return resources.size();
-                }
-
-                public void handlePostShutdownException(Throwable t) {
-                    ProjectPlugin.log("", t); //$NON-NLS-1$
-                }
-
-                public void postShutdown(IProgressMonitor monitor, IWorkbench workbench)
-                        throws Exception {
-                    monitor.beginTask(Messages.ProjectPlugin_saving_task_name, 0);
-                    turnOffEvents();
-                    List<Resource> resources = getProjectRegistry().eResource().getResourceSet()
-                            .getResources();
-                    for (Iterator<Resource> iter = resources.iterator(); iter.hasNext();) {
-                        Resource resource = (Resource) iter.next();
-                        if (resource.getContents().isEmpty()) {
-                            ProjectPlugin
-                                    .log("Not saving " + resource.getURI() + " empty contents"); //$NON-NLS-1$
-                            continue;
-                        }
-                        Object next = resource.getAllContents().next();
-                        if (resource.isModified() && next != null && !((EObject) next).eIsProxy()) {
-                            try {
-                                resource.save(saveOptions);
-                            } catch (Exception e) {
-                                ProjectPlugin.log("Error saving " + resource.getURI(), e); //$NON-NLS-1$
-                            }
-                        }
-                        monitor.worked(1);
-                    }
-                }
-
-            });
+            
             undoableCommandWarning = "true".equals(getString("org.locationtech.udig.project.undoableCommandWarning")); //$NON-NLS-1$//$NON-NLS-2$
         }
 

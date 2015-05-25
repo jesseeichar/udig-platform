@@ -30,7 +30,11 @@ public class PointCoordCalculator {
     MathTransform mapToLayer;
 
     public PointCoordCalculator( AffineTransform toScreen, MathTransform layerToMap ) {
+    	if (toScreen == null) {
+    		toScreen = new AffineTransform();
+    	}
         this.toScreen = new AffineTransform(toScreen);
+        
         this.layerToMap = layerToMap;
         AffineTransform temp;
         try {

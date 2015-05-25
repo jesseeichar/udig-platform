@@ -9,11 +9,18 @@
             id="com.camptocamp.sbb">
       </category>
       <view
-            name="Branches"
+            name="Geogig Branches"
             icon="icons/sample.gif"
             category="com.camptocamp.sbb"
-            class="com.camptocamp.sbb.views.BranchView"
+            class="com.camptocamp.sbb.views.BranchTypeView"
             id="com.camptocamp.sbb.views.BranchView">
+      </view>
+      <view
+            category="geogig"
+            class="com.camptocamp.sbb.views.GeogigLogViewer"
+            id="com.camptocamp.sbb.views.GeogigLogViewer"
+            name="Geogig LogView"
+            restorable="true">
       </view>
    </extension>
    <extension
@@ -24,6 +31,12 @@
             id="com.camptocamp.sbb.perspective1"
             name="SBB">
       </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="com.camptocamp.sbb.Startup">
+      </startup>
    </extension>
 
 </plugin>
