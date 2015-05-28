@@ -30,9 +30,17 @@ import org.locationtech.geogig.api.GeoGIG;
 import org.locationtech.geogig.api.ObjectId;
 import org.locationtech.geogig.api.Ref;
 import org.locationtech.geogig.api.RevCommit;
+import org.locationtech.geogig.api.plumbing.RevParse;
+import org.locationtech.geogig.api.porcelain.CheckoutOp;
 import org.locationtech.geogig.api.porcelain.LogOp;
+import org.locationtech.geogig.api.porcelain.ResetOp;
+import org.locationtech.geogig.api.porcelain.ResetOp.ResetMode;
 
 import com.camptocamp.sbb.Activator;
+import com.camptocamp.sbb.LayerToAdd;
+import com.camptocamp.sbb.Styling;
+import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 
 public class GeogigLogViewer extends ViewPart {
@@ -42,11 +50,13 @@ public class GeogigLogViewer extends ViewPart {
 	 */
 	public static final String ID = "com.camptocamp.sbb.views.GeogigLogViewer";
 
-	private ObjectId commit;
+	private String commit;
 
 	private TableViewer viewer;
 	private Action showInMap;
 	private Action doubleClickAction;
+
+	private Action reset;
 
 	/*
 	 * The content provider class is responsible for providing objects to the
@@ -66,7 +76,8 @@ public class GeogigLogViewer extends ViewPart {
 		public Object[] getElements(Object parent) {
 			if (commit != null) {
 				LogOp logOp = getGeoGig().command(LogOp.class);
-				logOp.addCommit(commit);
+				Optional<ObjectId> objectId = getGeoGig().command(RevParse.class).setRefSpec(commit).call();
+				logOp.addCommit(objectId.get());
 
 				Iterator<RevCommit> log = logOp.call();
 				List<RevCommit> logList = Lists.newArrayList();
@@ -155,17 +166,18 @@ public class GeogigLogViewer extends ViewPart {
 	}
 
 	private void fillContextMenu(IMenuManager manager) {
-			ISelection selection = viewer.getSelection();
-			if (selection instanceof StructuredSelection) {
-				StructuredSelection ss = (StructuredSelection) selection;
-				if (ss.getFirstElement() instanceof RevCommit) {
-					manager.add(showInMap);
-				}
+		ISelection selection = viewer.getSelection();
+		if (selection instanceof StructuredSelection) {
+			StructuredSelection ss = (StructuredSelection) selection;
+			if (ss.getFirstElement() instanceof RevCommit) {
+				manager.add(showInMap);
+				manager.add(reset);
 			}
+		}
 	}
 
 	private void fillLocalToolBar(IToolBarManager manager) {
-		BranchTypeView.addZoomAction(manager);
+		BranchTypeView.addZoomAction(getViewSite(), manager);
 	}
 
 	private void makeActions() {
@@ -175,11 +187,34 @@ public class GeogigLogViewer extends ViewPart {
 						.getSelection()).getFirstElement();
 				String commit = firstElement.getId().toString();
 				String ftName = "railways";
-				Activator.getDefault().showInMap(getSite(), commit, ftName);
+				Activator.getDefault().showInMap(getSite(), ftName + " (" + commit + ")", new LayerToAdd(commit, ftName, Styling.createTrackStyle()));
 			}
 		};
 		showInMap.setText("Show in Map");
-		showInMap.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
+		showInMap.setImageDescriptor(PlatformUI.getWorkbench()
+				.getSharedImages()
+				.getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+
+
+		reset = new Action() {
+			public void run() {
+				CheckoutOp checkoutOp = getGeoGig().command(CheckoutOp.class);
+				checkoutOp.setForce(true);
+				checkoutOp.setSource(commit.toString());
+				checkoutOp.call();
+				
+				RevCommit firstElement = (RevCommit) ((StructuredSelection) viewer
+						.getSelection()).getFirstElement();
+				ResetOp resetOp = getGeoGig().command(ResetOp.class);
+				resetOp.setCommit(Suppliers.ofInstance(firstElement.getId()));
+				resetOp.setMode(ResetMode.HARD);
+				resetOp.call();
+				
+				viewer.refresh();
+			}
+		};
+		reset.setText("Reset to Commit");
+		reset.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
 				.getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 
 		doubleClickAction = new Action() {
@@ -205,7 +240,7 @@ public class GeogigLogViewer extends ViewPart {
 	}
 
 	public void openLog(Ref firstElement) {
-		commit = firstElement.getObjectId();
+		commit = firstElement.getName();
 		viewer.refresh();
 	}
 }

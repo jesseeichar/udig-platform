@@ -28,7 +28,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 				.getPreferenceStore();
         store.setDefault(PreferenceConstants.P_ZOOM_REQUIRED_CLOSENESS, 0.7);
         store.setDefault(PreferenceConstants.P_REMOVE_LAYERS, true);
-        store.setDefault(PreferenceConstants.P_WARN_IRREVERSIBLE_COMMAND, true);
+        store.setDefault(PreferenceConstants.P_WARN_IRREVERSIBLE_COMMAND, false);
         store.setDefault(PreferenceConstants.P_ANTI_ALIASING, true);
 		store.setDefault(PreferenceConstants.P_DEFAULT_CRS, -1);
         store.setDefault(PreferenceConstants.P_TRANSPARENCY, true);

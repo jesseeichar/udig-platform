@@ -30,9 +30,10 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.internal.SharedImages;
+import org.eclipse.ui.internal.ViewSite;
 import org.eclipse.ui.part.ViewPart;
 import org.locationtech.geogig.api.GeoGIG;
 import org.locationtech.geogig.api.NodeRef;
@@ -42,6 +43,9 @@ import org.locationtech.geogig.api.porcelain.BranchCreateOp;
 import org.locationtech.geogig.api.porcelain.BranchDeleteOp;
 import org.locationtech.geogig.api.porcelain.BranchListOp;
 import org.locationtech.geogig.api.porcelain.CheckoutOp;
+import org.locationtech.geogig.api.porcelain.ResetOp;
+import org.locationtech.geogig.api.porcelain.ResetOp.ResetMode;
+import org.locationtech.udig.project.IMap;
 import org.locationtech.udig.project.command.Command;
 import org.locationtech.udig.project.internal.command.navigation.AbstractNavCommand;
 import org.locationtech.udig.project.internal.command.navigation.NavComposite;
@@ -50,6 +54,9 @@ import org.locationtech.udig.project.internal.commands.SetScaleCommand;
 import org.locationtech.udig.project.ui.ApplicationGIS;
 
 import com.camptocamp.sbb.Activator;
+import com.camptocamp.sbb.BranchMerge;
+import com.camptocamp.sbb.LayerToAdd;
+import com.camptocamp.sbb.Styling;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -78,7 +85,7 @@ public class BranchTypeView extends ViewPart {
 
 	public static final String ID = "com.camptocamp.sbb.views.BranchView";
 
-	private TreeViewer viewer;
+	public TreeViewer viewer;
 	private Action showInMap;
 	private Action createBranch;
 	private Action doubleClickAction;
@@ -89,6 +96,10 @@ public class BranchTypeView extends ViewPart {
 	private Action deleteBranch;
 
 	private Action openLog;
+
+	private Action merge;
+	private BranchMerge currentMerge;
+
 
 	class ViewContentProvider implements IStructuredContentProvider,
 			ITreeContentProvider {
@@ -109,8 +120,10 @@ public class BranchTypeView extends ViewPart {
 
 		public Object getParent(Object child) {
 			for (Ref ref : data.keySet()) {
-				if (data.get(ref).contains(child)) {
-					return ref;
+				for (NodeRef nRef : data.get(ref)) {
+					if (nRef == child) {
+						return ref;
+					}
 				}
 			}
 			return null;
@@ -186,7 +199,7 @@ public class BranchTypeView extends ViewPart {
 		getViewSite().setSelectionProvider(viewer);
 	}
 
-	private void warmCache() {
+	public void warmCache() {
 		data.clear();
 		BranchListOp branchListOp = getGeoGig().command(BranchListOp.class);
 		Collection<Ref> branches = branchListOp.call();
@@ -235,66 +248,109 @@ public class BranchTypeView extends ViewPart {
 					manager.add(addToMap);
 					manager.add(showInMap);
 				} else if (ss.getFirstElement() instanceof Ref) {
+					Ref ref = (Ref) ss.getFirstElement();
 					manager.add(createBranch);
 					manager.add(deleteBranch);
 					manager.add(openLog);
+					if (!ref.localName().equals("master")) {
+						manager.add(merge);
+					}
 				}
 			}
 		}
 	}
 
 	private void fillLocalToolBar(IToolBarManager manager) {
-		addZoomAction(manager);
+		addZoomAction(getViewSite(), manager);
+		addFinalizeMergeAction(manager);
 	}
 
-	public static void addZoomAction(IToolBarManager manager) {
-		manager.add(new Action("Zoom", Activator
-				.getImageDescriptor(SharedImages.IMG_OBJS_BKMRK_TSK)) {
+	private void addFinalizeMergeAction(IToolBarManager manager) {
+		manager.add(new Action("Complete Merge") {
 			@Override
 			public void run() {
-				zoom();
-			}
-
-			private void zoom() {
-				SetViewportCenterCommand centerCmd = new SetViewportCenterCommand(new Coordinate(802826, 182297));
-				AbstractNavCommand scale = new AbstractNavCommand() {
-					
-					@Override
-					public String getName() {
-						return "Set Scale";
-					}
-					
-					@Override
-					public Command copy() {
-						return null;
-					}
-					
-					@Override
-					protected void runImpl(IProgressMonitor monitor) throws Exception {
-						SetScaleCommand scale = new SetScaleCommand(8343);
-						scale.setMap(getMap());
-						scale.run(monitor);
-					}
-				};
-				ApplicationGIS.getActiveMap().sendCommandASync(new NavComposite(Lists.newArrayList(centerCmd, scale)));
+				if (currentMerge != null) {
+					currentMerge.finishMerge();
+					currentMerge = null;
+				}
 			}
 		});
+		
+	}
+
+	public static void addZoomAction(final IViewSite site, IToolBarManager manager) {
+		manager.add(new Action("Zoom") {
+			@Override
+			public void run() {
+				zoom(site, ApplicationGIS.getActiveMap());
+			}
+
+		});
+	}
+	public static void zoom(IViewSite site, IMap map) {
+		SetViewportCenterCommand centerCmd = new SetViewportCenterCommand(new Coordinate(802826, 182297));
+		AbstractNavCommand scale = new AbstractNavCommand() {
+			
+			@Override
+			public String getName() {
+				return "Set Scale";
+			}
+			
+			@Override
+			public Command copy() {
+				return null;
+			}
+			
+			@Override
+			protected void runImpl(IProgressMonitor monitor) throws Exception {
+				SetScaleCommand scale = new SetScaleCommand(8343);
+				scale.setMap(getMap());
+				scale.run(monitor);
+			}
+		};
+		map.sendCommandASync(new NavComposite(Lists.newArrayList(centerCmd, scale)));
+		
+		site.getPage().activate(site.getPage().getActiveEditor());
 	}
 
 	private void makeActions() {
 		createShowInMapAction();
 		createAddToMapAction();
-		createCreateActionBranch();
+		createCreateBranchAction();
 		createDeleteBranchAction();
 		createOpenLog();
+		createMergeAction();
 		
 		doubleClickAction = new Action() {
 			public void run() {
-				addToMap.run();
+				Object selEl = ((StructuredSelection) viewer.getSelection()).getFirstElement();
+				if (selEl instanceof Ref) {
+					Ref ref = (Ref) selEl;
+					viewer.setExpandedState(ref, true);
+				} else {
+					showInMap.run();
+				}
 			}
 		};
 	}
 
+	private void createMergeAction() {
+		merge = new Action() {
+			public void run() {
+				Ref ref = (Ref) ((StructuredSelection) viewer.getSelection()).getFirstElement();
+				currentMerge = new BranchMerge(ref, "railways", BranchTypeView.this);
+				currentMerge.execute();
+			}
+		};
+		merge.setText("Merge");
+		merge
+				.setImageDescriptor(PlatformUI
+						.getWorkbench()
+						.getSharedImages()
+						.getImageDescriptor(
+								org.locationtech.udig.project.ui.internal.ISharedImages.DELETE));
+	}
+	
 	private void createDeleteBranchAction() {
 		deleteBranch = new Action() {
 			public void run() {
@@ -302,28 +358,28 @@ public class BranchTypeView extends ViewPart {
 				checkoutOp.setForce(true);
 				checkoutOp.setSource("master");
 				checkoutOp.call();
-
+				
 				Ref ref = (Ref) ((StructuredSelection) viewer.getSelection())
 						.getFirstElement();
 				BranchDeleteOp createOp = getGeoGig().command(
 						BranchDeleteOp.class);
 				createOp.setName(ref.getName());
 				createOp.call();
-
+				
 				warmCache();
 				viewer.refresh();
 			}
 		};
 		deleteBranch.setText("Delete Branch");
 		deleteBranch
-				.setImageDescriptor(PlatformUI
-						.getWorkbench()
-						.getSharedImages()
-						.getImageDescriptor(
-								org.locationtech.udig.project.ui.internal.ISharedImages.DELETE));
+		.setImageDescriptor(PlatformUI
+				.getWorkbench()
+				.getSharedImages()
+				.getImageDescriptor(
+						org.locationtech.udig.project.ui.internal.ISharedImages.DELETE));
 	}
 
-	private void createCreateActionBranch() {
+	private void createCreateBranchAction() {
 		createBranch = new Action() {
 			public void run() {
 				String branchName = openInputDialog(viewer.getControl()
@@ -332,6 +388,8 @@ public class BranchTypeView extends ViewPart {
 					Ref ref = (Ref) ((StructuredSelection) viewer
 							.getSelection()).getFirstElement();
 
+					getGeoGig().command(ResetOp.class).setMode(ResetMode.HARD).call();
+					
 					BranchCreateOp createOp = getGeoGig().command(
 							BranchCreateOp.class);
 					createOp.setForce(true);
@@ -341,6 +399,8 @@ public class BranchTypeView extends ViewPart {
 					createOp.call();
 					warmCache();
 					viewer.refresh();
+					Activator.getDefault().showInMap(getSite(), "railways (" + branchName + ")", 
+							new LayerToAdd(branchName, "railways", Styling.createTrackStyle()));
 				}
 			}
 		};
@@ -358,10 +418,10 @@ public class BranchTypeView extends ViewPart {
 			public void run() {
 				NodeRef firstElement = (NodeRef) ((StructuredSelection) viewer
 						.getSelection()).getFirstElement();
-				Ref ref = (Ref) ((ViewContentProvider) viewer
-						.getContentProvider()).getParent(firstElement);
-				Activator.getDefault().showInMap(getViewSite(), ref.getName(),
-						firstElement.name());
+				Ref ref = (Ref) ((ViewContentProvider) viewer.getContentProvider()).getParent(firstElement);
+				String featureTypeName = firstElement.name();
+				Activator.getDefault().showInMap(getViewSite(), featureTypeName + " (" + ref.localName() + ")", 
+						new LayerToAdd(ref.getName(), featureTypeName, Styling.createTrackStyle()));
 			}
 		};
 		showInMap.setText("Show in Map");
@@ -380,8 +440,9 @@ public class BranchTypeView extends ViewPart {
 						.getSelection()).getFirstElement();
 				Ref ref = (Ref) ((ViewContentProvider) viewer
 						.getContentProvider()).getParent(firstElement);
-				Activator.getDefault().addToMap(getViewSite(), ref.getName(),
-						firstElement.name());
+				String featureTypeName = firstElement.name();
+				Activator.getDefault().addToMap(getViewSite(), featureTypeName + " (" + ref.localName() + ")", 
+						new LayerToAdd(ref.getName(), featureTypeName, Styling.createTrackStyle()));
 			}
 		};
 		addToMap.setText("Add to Map");

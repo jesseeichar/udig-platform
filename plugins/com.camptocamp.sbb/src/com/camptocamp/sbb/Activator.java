@@ -2,40 +2,30 @@ package com.camptocamp.sbb;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.runtime.ISafeRunnable;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IWorkbenchSite;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.geotools.data.simple.SimpleFeatureSource;
 import org.locationtech.geogig.api.ContextBuilder;
 import org.locationtech.geogig.api.GeoGIG;
 import org.locationtech.geogig.api.GlobalContextBuilder;
 import org.locationtech.geogig.cli.CLIContextBuilder;
-import org.locationtech.geogig.geotools.data.GeoGigDataStoreFactory;
 import org.locationtech.udig.catalog.CatalogPlugin;
-import org.locationtech.udig.catalog.ICatalog;
-import org.locationtech.udig.catalog.ID;
 import org.locationtech.udig.catalog.IGeoResource;
 import org.locationtech.udig.catalog.IResolve;
 import org.locationtech.udig.catalog.IService;
-import org.locationtech.udig.catalog.geotools.data.DataStoreServiceExtension;
 import org.locationtech.udig.project.IMap;
+import org.locationtech.udig.project.internal.Layer;
+import org.locationtech.udig.project.internal.Map;
+import org.locationtech.udig.project.internal.commands.CreateMapCommand;
 import org.locationtech.udig.project.ui.ApplicationGIS;
-import org.locationtech.udig.project.ui.internal.tool.display.ToolManager;
-import org.locationtech.udig.project.ui.tool.ModalTool;
 import org.osgi.framework.BundleContext;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
 /**
@@ -105,53 +95,77 @@ public class Activator extends AbstractUIPlugin {
 		return geoGig;
 	}
 
-	public void showInMap(IWorkbenchSite site, String commit, String ftName) {
-		IGeoResource resource = null;
-
-		resource = getResource(commit, ftName, resource);
-
-		if (resource != null) {
-			createAndOpenMap(resource);
-		}
+	public void showInMap(IWorkbenchSite site, String mapName, LayerToAdd... layersToAdd) {
+		createAndOpenMap(site, mapName, null, layersToAdd);
+	}
+	
+	public void showInMap(IWorkbenchSite site, String mapName, Function<Map, Void> postOpenAction, LayerToAdd... layersToAdd) {
+		createAndOpenMap(site, mapName, postOpenAction, layersToAdd);
 	}
 
-	private void createAndOpenMap(final IGeoResource resource) {
+	private void createAndOpenMap(final IWorkbenchSite site, final String name, final Function<Map, Void> postOpenAction, final LayerToAdd... layersToAdd) {
 		ApplicationGIS.run(new ISafeRunnable() {
-			
+
 			@Override
 			public void run() throws Exception {
-				List<IGeoResource> layers = getBackgroundResources();
-				layers.add(resource);
-				ApplicationGIS.createAndOpenMap(layers);
+				List<IGeoResource> background = getBackgroundResources();
+
+				CreateMapCommand command = new CreateMapCommand(null, background, null);
+				ApplicationGIS.getActiveProject().sendSync(command);
+				ApplicationGIS.openMap(command.getCreatedMap(), true);
+				org.locationtech.udig.project.internal.Map map = (org.locationtech.udig.project.internal.Map) ApplicationGIS.getActiveMap();
+				map.setName(name);
+				
+				List<Layer> layers = toLayers(map, layersToAdd);
+				map.getLayersInternal().addAll(layers);
+
+				Layer layerToEdit = layers.get(layers.size() - 1);
+				map.getEditManagerInternal().setSelectedLayer(layerToEdit);
+				
+				if (postOpenAction != null) {
+					postOpenAction.apply(map);
+				}
+
+				site.getPage().activate(site.getPage().getActiveEditor());
 			}
-			
+
 			@Override
 			public void handleException(Throwable exception) {
 				exception.printStackTrace();
 			}
 		});
 	}
+
+	private List<Layer> toLayers(org.locationtech.udig.project.internal.Map map, final LayerToAdd... layersToAdd) {
+		List<Layer> layers = Lists.newArrayList();
+		for (LayerToAdd layerToAdd : layersToAdd) {
+			layers.add(layerToAdd.createLayer(map.getLayerFactory()));
+		}
+		return layers;
+	}
 	
-	public void addToMap(IWorkbenchSite site, String commit, String ftName) {
-		IGeoResource resource = null;
-		resource = getResource(commit, ftName, resource);
-		
-		if (resource != null) {
-			Collection<? extends IMap> activeMap = ApplicationGIS.getVisibleMaps();
-			if (activeMap.isEmpty()) {
-				createAndOpenMap(resource);
+	public void addToMap(IWorkbenchSite site, String mapName, LayerToAdd... layersToAdd) {
+
+			Collection<? extends IMap> visibleMap = ApplicationGIS
+					.getVisibleMaps();
+			if (visibleMap.isEmpty()) {
+				createAndOpenMap(site, mapName, null, layersToAdd);
 			} else {
-				ApplicationGIS.addLayersToMap(activeMap.iterator().next(), Collections.singletonList(resource), 0);
-			}
+				Map activeMap = (Map) ApplicationGIS.getActiveMap();
+				activeMap.getLayersInternal().addAll(toLayers(activeMap, layersToAdd));
 		}
 	}
 
 	private List<IGeoResource> getBackgroundResources() {
 		try {
 			NullProgressMonitor monitor = new NullProgressMonitor();
-			IService service = CatalogPlugin.getDefault().getLocalCatalog().acquire(new File("E:/SBB/Kantone.shp").toURI().toURL(), monitor);
+			IService service = CatalogPlugin
+					.getDefault()
+					.getLocalCatalog()
+					.acquire(new File("E:/SBB/Kantone.shp").toURI().toURL(),
+							monitor);
 			List<IGeoResource> resources = Lists.newArrayList();
-			for (IResolve resolve: service.members(monitor)) {
+			for (IResolve resolve : service.members(monitor)) {
 				resources.add((IGeoResource) resolve);
 			}
 			return resources;
@@ -159,46 +173,6 @@ public class Activator extends AbstractUIPlugin {
 			e.printStackTrace();
 			return Lists.newArrayList();
 		}
-	}
-
-	private IGeoResource getResource(String commit, String ftName, IGeoResource resource) {
-		try {
-			Map<String, Serializable> params = new HashMap<String, Serializable>();
-			params.put(GeoGigDataStoreFactory.HEAD.getName(), commit);
-			params.put(GeoGigDataStoreFactory.REPOSITORY.getName(), new File(geoGig.getRepository().getLocation().toURI()).toString());
-			URL url = new URL("http://geogig.com/" + commit + "/" + ftName);
-			params.put("ID", url);
-
-			DataStoreServiceExtension ext = new DataStoreServiceExtension();
-			ID id = DataStoreServiceExtension.createID(url, new GeoGigDataStoreFactory(), params);
-			NullProgressMonitor monitor = new NullProgressMonitor();
-			ICatalog localCatalog = CatalogPlugin.getDefault().getLocalCatalog();
-			IService service = localCatalog.getById(IService.class, id, monitor);
-			if (service == null) {
-				service = ext.createService(url, params);
-				localCatalog.add(service);
-			}
-			
-			List<? extends IGeoResource> resources = service.resources(monitor);
-			for (IGeoResource iGeoResource : resources) {
-				SimpleFeatureSource resolve = iGeoResource.resolve(SimpleFeatureSource.class, monitor);
-				if (ftName.equals(resolve.getSchema().getName().getLocalPart())) {
-					resource = iGeoResource;
-					break;
-				}
-			}
-
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return resource;
 	}
 
 	/**
