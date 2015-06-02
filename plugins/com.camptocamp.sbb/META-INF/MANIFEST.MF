@@ -12,7 +12,8 @@ Require-Bundle: org.eclipse.ui,
  org.locationtech.udig.catalog.geotools;bundle-version="2.0.0",
  org.locationtech.udig.catalog.shp;bundle-version="2.0.0",
  org.locationtech.udig.tools.edit;bundle-version="2.0.0",
- org.locationtech.udig.style.sld;bundle-version="2.0.0"
+ org.locationtech.udig.style.sld;bundle-version="2.0.0",
+ org.locationtech.udig.style;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Import-Package: com.google.common.base;version="17.0.0",

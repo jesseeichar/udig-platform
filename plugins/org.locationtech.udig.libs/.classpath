@@ -84,7 +84,7 @@
 	<classpathentry exported="true" kind="lib" path="lib/gt-xsd-gml3-11.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/gt-xsd-kml-11.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/gt-xsd-ows-11.2.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/gt-xsd-sld-11.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/gt-xsd-sld-11.2.jar" sourcepath="lib-src/gt-xsd-sld-11.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/gt-xsd-wfs-11.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/gt-xsd-wps-11.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/h2-1.1.119.jar"/>

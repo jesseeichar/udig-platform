@@ -45,5 +45,15 @@
             id="com.camptocamp.sbb.layerAdded1">
       </layerAdded>
    </extension>
+   <extension
+         point="org.locationtech.udig.style.sld.StyleEditorPage">
+      <StyleEditorPage
+            class="com.camptocamp.sbb.style.GeoserverStyleEditorPage"
+            contentType="org.locationtech.udig.project.ILayer"
+            id="com.camptocamp.sbb.GeoserverStyling"
+            label="Geoserver"
+            requires="org.geotools.data.FeatureSource">
+      </StyleEditorPage>
+   </extension>
 
 </plugin>

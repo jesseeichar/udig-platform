@@ -10,7 +10,6 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -22,18 +21,15 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.internal.ViewSite;
 import org.eclipse.ui.part.ViewPart;
 import org.locationtech.geogig.api.GeoGIG;
 import org.locationtech.geogig.api.NodeRef;
@@ -382,7 +378,7 @@ public class BranchTypeView extends ViewPart {
 	private void createCreateBranchAction() {
 		createBranch = new Action() {
 			public void run() {
-				String branchName = openInputDialog(viewer.getControl()
+				String branchName = Activator.openInputDialog(viewer.getControl()
 						.getShell(), "Create Branch", "Enter name of branch:");
 				if (branchName != null) {
 					Ref ref = (Ref) ((StructuredSelection) viewer
@@ -476,15 +472,6 @@ public class BranchTypeView extends ViewPart {
 				.getSharedImages()
 				.getImageDescriptor(
 						org.locationtech.udig.project.ui.internal.ISharedImages.LAYER_OBJ));
-	}
-
-	private String openInputDialog(Shell parent, String text, String message) {
-		InputDialog inputDialog = new InputDialog(parent, text, message,
-				"BranchA", null);
-		if (inputDialog.open() != Window.OK) {
-			return null;
-		}
-		return inputDialog.getValue();
 	}
 
 	private void hookDoubleClickAction() {

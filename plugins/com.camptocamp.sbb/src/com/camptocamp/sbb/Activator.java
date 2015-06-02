@@ -7,7 +7,10 @@ import java.util.List;
 
 import org.eclipse.core.runtime.ISafeRunnable;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchSite;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.locationtech.geogig.api.ContextBuilder;
@@ -173,6 +176,15 @@ public class Activator extends AbstractUIPlugin {
 			e.printStackTrace();
 			return Lists.newArrayList();
 		}
+	}
+
+	public static String openInputDialog(Shell parent, String text, String message) {
+		InputDialog inputDialog = new InputDialog(parent, text, message,
+				"BranchA", null);
+		if (inputDialog.open() != Window.OK) {
+			return null;
+		}
+		return inputDialog.getValue();
 	}
 
 	/**

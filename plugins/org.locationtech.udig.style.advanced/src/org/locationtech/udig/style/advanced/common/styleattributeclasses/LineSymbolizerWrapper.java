@@ -134,6 +134,7 @@ public class LineSymbolizerWrapper extends SymbolizerWrapper {
     }
     
     private void initEndPointSymbolizers(){
+    	try {
     	for (Symbolizer x : super.getParent().getRule().getSymbolizers()){
         	if (x instanceof PointSymbolizer){
         		PointSymbolizer pnt = (PointSymbolizer) x;
@@ -155,6 +156,9 @@ public class LineSymbolizerWrapper extends SymbolizerWrapper {
         		}
         	}
         }
+    	} catch (NullPointerException e) {
+    		// ignore
+    	}
     }
     
     public PointSymbolizerWrapper getEndPointStyle(){
