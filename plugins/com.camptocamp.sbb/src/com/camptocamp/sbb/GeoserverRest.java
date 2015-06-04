@@ -57,23 +57,26 @@ public class GeoserverRest {
 		}
 	}
 	
-	public static int post(String restRequest, String method, String contentType, String sld) {
+	public static int exec(String restRequest, String method, String contentType, String data) {
 		try {
 			URL url = new URL(restRequest);
 			HttpURLConnection openConnection = (HttpURLConnection) url.openConnection();
 			try {
-				openConnection.setDoOutput(true);
 				openConnection.setRequestMethod(method);
 
 				String authString = "admin:geoserver";
 				String authStringEnc = Base64.getEncoder().encodeToString(authString.getBytes());
 				openConnection.addRequestProperty("Authorization", "Basic " + authStringEnc);
-				openConnection.addRequestProperty("Content-type", contentType);
+				if (contentType != null) {
+					openConnection.addRequestProperty("Content-type", contentType);
+				}
 
-				OutputStream outputStream = openConnection.getOutputStream();
-				IOUtils.write(sld, outputStream);
-				outputStream.close();
-				
+				if (data != null) {
+					openConnection.setDoOutput(true);
+					OutputStream outputStream = openConnection.getOutputStream();
+					IOUtils.write(data, outputStream);
+					outputStream.close();
+				}
 				return openConnection.getResponseCode();
 			} finally {
 				openConnection.disconnect();

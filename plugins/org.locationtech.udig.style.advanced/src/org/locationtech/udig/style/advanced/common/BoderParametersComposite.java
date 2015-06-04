@@ -100,7 +100,6 @@ public class BoderParametersComposite extends ParameterComposite implements Modi
     public void init( RuleWrapper ruleWrapper ) {
         LineSymbolizerWrapper lineSymbolizerWrapper = ruleWrapper.getGeometrySymbolizersWrapper().adapt(
                 LineSymbolizerWrapper.class);
-
         mainComposite = new Composite(parent, SWT.NONE);
         mainComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
         mainComposite.setLayout(new GridLayout(3, true));
@@ -401,6 +400,10 @@ public class BoderParametersComposite extends ParameterComposite implements Modi
         LineSymbolizerWrapper lineSymbolizerWrapper = ruleWrapper.getGeometrySymbolizersWrapper().adapt(
                 LineSymbolizerWrapper.class);
 
+        if (lineSymbolizerWrapper == null) {
+        	return;
+        }
+        
         boolean widgetEnabled = lineSymbolizerWrapper.hasStroke();
         // border
         borderEnableButton.setSelection(widgetEnabled);

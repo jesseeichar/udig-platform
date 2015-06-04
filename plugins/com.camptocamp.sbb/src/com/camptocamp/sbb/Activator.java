@@ -2,6 +2,7 @@ package com.camptocamp.sbb;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 
@@ -47,6 +48,24 @@ public class Activator extends AbstractUIPlugin {
 	private GeoGIG geoGig;
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.camptocamp.sbb"; //$NON-NLS-1$
+	public static final String SBB_DIR = "C:/SBB";
+	public static final URL KANTONE_URL;
+	public static final URL RAILWAY_URL;
+	static {
+		URL tmp;
+		try {
+			tmp = new File(SBB_DIR + "/Kantone.shp").toURI().toURL();
+		} catch (IOException e) {
+			tmp = null;
+		}
+		KANTONE_URL = tmp;
+		try {
+			tmp = new File(SBB_DIR + "/railways.shp").toURI().toURL();
+		} catch (IOException e) {
+			tmp = null;
+		}
+		RAILWAY_URL = tmp;
+	}
 
 	// The shared instance
 	private static Activator plugin;
@@ -68,7 +87,7 @@ public class Activator extends AbstractUIPlugin {
 		super.start(context);
 		plugin = this;
 
-		geoGig = new GeoGIG(new File("E:\\SBB"));
+		geoGig = new GeoGIG(new File(SBB_DIR));
 		geoGig.getRepository();
 	}
 
@@ -129,7 +148,9 @@ public class Activator extends AbstractUIPlugin {
 					postOpenAction.apply(map);
 				}
 
-				site.getPage().activate(site.getPage().getActiveEditor());
+				if (site != null) {
+					site.getPage().activate(site.getPage().getActiveEditor());
+				}
 			}
 
 			@Override
@@ -165,7 +186,7 @@ public class Activator extends AbstractUIPlugin {
 			IService service = CatalogPlugin
 					.getDefault()
 					.getLocalCatalog()
-					.acquire(new File("E:/SBB/Kantone.shp").toURI().toURL(),
+					.acquire(KANTONE_URL,
 							monitor);
 			List<IGeoResource> resources = Lists.newArrayList();
 			for (IResolve resolve : service.members(monitor)) {

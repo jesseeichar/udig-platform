@@ -39,7 +39,7 @@ public class LayerToAdd {
 		this.layerName = layerName;
 	}
 
-	private IGeoResource getResource() {
+	IGeoResource getResource() {
 		IGeoResource resource = null;
 		try {
 			Map<String, Serializable> params = new HashMap<String, Serializable>();

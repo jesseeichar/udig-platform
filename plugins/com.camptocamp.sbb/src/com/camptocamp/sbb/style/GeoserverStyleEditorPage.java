@@ -136,7 +136,7 @@ public class GeoserverStyleEditorPage extends StyleEditorPage {
 						public void run() {
 							String newName = Activator.openInputDialog(getShell(), "Style Name", "Enter the name of the new style");
 							String createXml = "<style><name>" + newName + "</name><filename>" + newName + ".sld</filename></style>";
-							if (checkUpdate(GeoserverRest.post(GEOSERVER_URL + "rest/styles", "POST", "text/xml", createXml), false)) {
+							if (checkUpdate(GeoserverRest.exec(GEOSERVER_URL + "rest/styles", "POST", "text/xml", createXml), false)) {
 								doUpdate(newName, sld);
 								refresh();
 							}
@@ -163,7 +163,7 @@ public class GeoserverStyleEditorPage extends StyleEditorPage {
 	}
 
 	boolean doUpdate(String name, String sld) {
-		return checkUpdate(GeoserverRest.post(GEOSERVER_URL + "rest/styles/" + name, "PUT", "application/vnd.ogc.sld+xml", sld), true);
+		return checkUpdate(GeoserverRest.exec(GEOSERVER_URL + "rest/styles/" + name, "PUT", "application/vnd.ogc.sld+xml", sld), true);
 	}
 	
 	boolean checkUpdate(int responseCode, boolean showSuccess) {

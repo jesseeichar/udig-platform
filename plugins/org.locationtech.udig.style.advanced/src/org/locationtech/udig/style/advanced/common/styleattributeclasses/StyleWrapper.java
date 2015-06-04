@@ -81,6 +81,18 @@ public class StyleWrapper {
         }
         return null;
     }
+    public RuleWrapper getFirstRule(Class cls) {
+    	if (featureTypeStylesWrapperList.size() > 0) {
+    		FeatureTypeStyleWrapper featureTypeStyleWrapper = featureTypeStylesWrapperList.get(0);
+    		List<RuleWrapper> rulesWrapperList = featureTypeStyleWrapper.getRulesWrapperList();
+    		for (RuleWrapper ruleWrapper : rulesWrapperList) {
+				if (ruleWrapper.getGeometrySymbolizersWrapper().adapt(cls) != null) {
+					return ruleWrapper;
+				}
+			}
+    	}
+    	return null;
+    }
 
     /**
      * Add a supplied or new {@link FeatureTypeStyle} to the {@link Style}.

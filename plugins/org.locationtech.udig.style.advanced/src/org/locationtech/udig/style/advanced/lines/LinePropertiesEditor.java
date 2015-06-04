@@ -17,7 +17,6 @@ import org.locationtech.udig.catalog.ID;
 import org.locationtech.udig.catalog.IGeoResource;
 import org.locationtech.udig.style.internal.StyleLayer;
 import org.locationtech.udig.style.sld.SLD;
-
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
@@ -43,8 +42,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.geotools.styling.FeatureTypeStyle;
+import org.geotools.styling.LineSymbolizer;
 import org.geotools.styling.Style;
-
 import org.locationtech.udig.style.advanced.common.GroupRulesTreeContentProvider;
 import org.locationtech.udig.style.advanced.common.GroupRulesTreeLabelProvider;
 import org.locationtech.udig.style.advanced.common.PropertiesEditor;
@@ -165,7 +164,7 @@ public class LinePropertiesEditor extends PropertiesEditor {
         // propertiesCompositeGD.horizontalSpan = 2;
         propertiesComposite.setLayoutData(propertiesCompositeGD);
 
-        RuleWrapper ruleWrapper = styleWrapper.getFirstRule();
+        RuleWrapper ruleWrapper = styleWrapper.getFirstRule(LineSymbolizerWrapper.class);
         if (ruleWrapper != null) {
             setRuleToSelected(ruleWrapper);
         } else {

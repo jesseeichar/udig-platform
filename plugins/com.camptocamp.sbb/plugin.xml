@@ -16,10 +16,17 @@
             id="com.camptocamp.sbb.views.BranchView">
       </view>
       <view
-            category="geogig"
+            category="com.camptocamp.sbb"
             class="com.camptocamp.sbb.views.GeogigLogViewer"
             id="com.camptocamp.sbb.views.GeogigLogViewer"
             name="Geogig LogView"
+            restorable="true">
+      </view>
+      <view
+            category="com.camptocamp.sbb"
+            class="com.camptocamp.sbb.views.WPSView"
+            id="com.camptocamp.sbb.views.WPS"
+            name="Web Processing"
             restorable="true">
       </view>
    </extension>

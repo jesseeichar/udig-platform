@@ -91,13 +91,17 @@ public class LinePropertiesComposite implements ModifyListener, IStyleChangesLis
     }
 
     private void update() {
-        generalParametersComposite.update(ruleWrapper);
-        borderParametersComposite.update(ruleWrapper);
-        labelsParametersComposite.update(ruleWrapper);
-        filtersComposite.update(ruleWrapper);
-
-        linePropertiesEditor.refreshTreeViewer(ruleWrapper);
-        linePropertiesEditor.refreshPreviewCanvasOnStyle();
+    	LineSymbolizerWrapper lineSymbolizer = ruleWrapper.getGeometrySymbolizersWrapper().adapt(
+                LineSymbolizerWrapper.class);
+    	if (lineSymbolizer != null) {
+	        generalParametersComposite.update(ruleWrapper);
+	        borderParametersComposite.update(ruleWrapper);
+	        labelsParametersComposite.update(ruleWrapper);
+	        filtersComposite.update(ruleWrapper);
+	
+	        linePropertiesEditor.refreshTreeViewer(ruleWrapper);
+	        linePropertiesEditor.refreshPreviewCanvasOnStyle();
+    	}
     }
 
     private void init() {
