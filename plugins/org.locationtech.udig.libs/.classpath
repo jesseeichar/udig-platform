@@ -73,7 +73,7 @@
 	<classpathentry exported="true" kind="lib" path="lib/gt-transform-11.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/gt-unidata-11.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/gt-validation-11.2.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/gt-wfs-11.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/gt-wfs-11.2.jar" sourcepath="lib-src/gt-wfs-11.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/gt-wms-11.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/gt-wps-11.2.jar" sourcepath="lib-src/gt-wps-11.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/gt-xml-11.2.jar"/>

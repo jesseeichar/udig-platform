@@ -14,6 +14,10 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchSite;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.geotools.data.FeatureStore;
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.data.simple.SimpleFeatureStore;
+import org.geotools.factory.CommonFactoryFinder;
 import org.locationtech.geogig.api.ContextBuilder;
 import org.locationtech.geogig.api.GeoGIG;
 import org.locationtech.geogig.api.GlobalContextBuilder;
@@ -22,11 +26,19 @@ import org.locationtech.udig.catalog.CatalogPlugin;
 import org.locationtech.udig.catalog.IGeoResource;
 import org.locationtech.udig.catalog.IResolve;
 import org.locationtech.udig.catalog.IService;
+import org.locationtech.udig.project.EditManagerEvent;
+import org.locationtech.udig.project.IEditManager;
+import org.locationtech.udig.project.IEditManagerListener;
+import org.locationtech.udig.project.ILayer;
 import org.locationtech.udig.project.IMap;
+import org.locationtech.udig.project.IMapListener;
+import org.locationtech.udig.project.MapEvent;
+import org.locationtech.udig.project.MapEvent.MapEventType;
 import org.locationtech.udig.project.internal.Layer;
 import org.locationtech.udig.project.internal.Map;
 import org.locationtech.udig.project.internal.commands.CreateMapCommand;
 import org.locationtech.udig.project.ui.ApplicationGIS;
+import org.opengis.filter.FilterFactory2;
 import org.osgi.framework.BundleContext;
 
 import com.google.common.base.Function;
@@ -66,6 +78,24 @@ public class Activator extends AbstractUIPlugin {
 		}
 		RAILWAY_URL = tmp;
 	}
+	private IEditManagerListener businessRulesApplicator = new IEditManagerListener() {
+
+		@Override
+		public void changed(EditManagerEvent event) {
+			ILayer editLayer = event.getSource().getEditLayer();
+			if (event.getType() == EditManagerEvent.PRE_COMMIT && editLayer.getName().equals("sbb_poi")) {
+				try {
+					SimpleFeatureStore fs = editLayer.getResource(SimpleFeatureStore.class, new NullProgressMonitor());
+					FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
+					SimpleFeatureCollection features = fs.getFeatures(ff.equal(ff.property("processed"), ff.literal(true), false));
+					System.out.println(features.size());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+			}
+		}
+	};
 
 	// The shared instance
 	private static Activator plugin;
@@ -120,7 +150,7 @@ public class Activator extends AbstractUIPlugin {
 	public void showInMap(IWorkbenchSite site, String mapName, LayerToAdd... layersToAdd) {
 		createAndOpenMap(site, mapName, null, layersToAdd);
 	}
-	
+
 	public void showInMap(IWorkbenchSite site, String mapName, Function<Map, Void> postOpenAction, LayerToAdd... layersToAdd) {
 		createAndOpenMap(site, mapName, postOpenAction, layersToAdd);
 	}
@@ -137,17 +167,26 @@ public class Activator extends AbstractUIPlugin {
 				ApplicationGIS.openMap(command.getCreatedMap(), true);
 				org.locationtech.udig.project.internal.Map map = (org.locationtech.udig.project.internal.Map) ApplicationGIS.getActiveMap();
 				map.setName(name);
-				
+
 				List<Layer> layers = toLayers(map, layersToAdd);
 				map.getLayersInternal().addAll(layers);
 
 				Layer layerToEdit = layers.get(layers.size() - 1);
 				map.getEditManagerInternal().setSelectedLayer(layerToEdit);
-				
+
 				if (postOpenAction != null) {
 					postOpenAction.apply(map);
 				}
-
+				map.addMapListener(new IMapListener() {
+					
+					@Override
+					public void changed(MapEvent event) {
+						if (event.getType() == MapEventType.EDIT_MANAGER) {
+							((IEditManager)event.getNewValue()).addListener(businessRulesApplicator);
+						}
+					}
+				});
+				addCommitListener(map);
 				if (site != null) {
 					site.getPage().activate(site.getPage().getActiveEditor());
 				}
@@ -160,6 +199,17 @@ public class Activator extends AbstractUIPlugin {
 		});
 	}
 
+	// HACK. In actual system this should be in Geoserver.
+	// This is to simulate business rules being executed on a commit
+	// In actual system there should be a pre or post commit listener in
+	// Geoserver that executes the business
+	// rules.
+	protected void addCommitListener(Map map) {
+		if (!map.getEditManagerInternal().containsListener(businessRulesApplicator)) {
+			map.getEditManager().addListener(businessRulesApplicator);
+		}
+	}
+
 	private List<Layer> toLayers(org.locationtech.udig.project.internal.Map map, final LayerToAdd... layersToAdd) {
 		List<Layer> layers = Lists.newArrayList();
 		for (LayerToAdd layerToAdd : layersToAdd) {
@@ -167,16 +217,16 @@ public class Activator extends AbstractUIPlugin {
 		}
 		return layers;
 	}
-	
+
 	public void addToMap(IWorkbenchSite site, String mapName, LayerToAdd... layersToAdd) {
 
-			Collection<? extends IMap> visibleMap = ApplicationGIS
-					.getVisibleMaps();
-			if (visibleMap.isEmpty()) {
-				createAndOpenMap(site, mapName, null, layersToAdd);
-			} else {
-				Map activeMap = (Map) ApplicationGIS.getActiveMap();
-				activeMap.getLayersInternal().addAll(toLayers(activeMap, layersToAdd));
+		Collection<? extends IMap> visibleMap = ApplicationGIS
+				.getVisibleMaps();
+		if (visibleMap.isEmpty()) {
+			createAndOpenMap(site, mapName, null, layersToAdd);
+		} else {
+			Map activeMap = (Map) ApplicationGIS.getActiveMap();
+			activeMap.getLayersInternal().addAll(toLayers(activeMap, layersToAdd));
 		}
 	}
 

@@ -26,9 +26,12 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -60,7 +63,7 @@ public class WPSView extends ViewPart {
 	private TableViewer processList;
 	private TableViewer chainViewer;
 
-	private WpsProcess[] processes;
+	private WpsProcess[] processes = new WpsProcess[0];
 	private List<WpsProcess> chain = Lists.newArrayList();
 
 	private LayerSelectionDialog layerSelectionDialog;
@@ -121,8 +124,6 @@ public class WPSView extends ViewPart {
 	 * it.
 	 */
 	public void createPartControl(Composite parent) {
-		loadProcesses();
-
 		ISelectionChangedListener showAbstract = new ISelectionChangedListener() {
 
 			@Override
@@ -136,10 +137,29 @@ public class WPSView extends ViewPart {
 			}
 		};
 
-		Composite composite = new Composite(parent, SWT.NONE);
+		final Composite composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		composite.setLayout(layout);
+
+		final Combo combo = new Combo(composite, SWT.BORDER);
+		combo.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false, 2, 1));
+		combo.setText("Enter WPS Server URL");
+		combo.setItems(new String[] { GeoserverRest.GEOSERVER_URL + "wps" });
+		combo.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				loadProcesses();
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				widgetSelected(e);
+
+			}
+		});
+
 		processList = new TableViewer(composite, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		processList.setContentProvider(new ViewContentProvider());
 		processList.setLabelProvider(new ViewLabelProvider());
@@ -182,6 +202,7 @@ public class WPSView extends ViewPart {
 					}
 
 				});
+		processList.refresh();
 	}
 
 	private void hookContextMenu() {
@@ -248,21 +269,24 @@ public class WPSView extends ViewPart {
 							GeoserverRest.exec(GeoserverRest.GEOSERVER_URL + "rest/workspaces/topp/datastores", "POST", "text/xml", postgisConfig);
 							String inputLayer = layerSelectionDialog.getFeatureType().toLowerCase();
 							String layerConfig = String.format("<featureType><name>%s</name></featureType>", inputLayer);
-							GeoserverRest.exec(GeoserverRest.GEOSERVER_URL + "rest/workspaces/topp/datastores/sbb_demo/featuretypes", "POST", "text/xml", layerConfig);
-							Boolean layerExists = GeoserverRest.execRestDom(GeoserverRest.GEOSERVER_URL + "rest/workspaces/topp/datastores/sbb_demo/featuretypes/" + inputLayer + ".xml", new Function<Document, Boolean>() {
+							GeoserverRest.exec(GeoserverRest.GEOSERVER_URL + "rest/workspaces/topp/datastores/sbb_demo/featuretypes", "POST", "text/xml",
+									layerConfig);
+							Boolean layerExists = GeoserverRest.execRestDom(GeoserverRest.GEOSERVER_URL
+									+ "rest/workspaces/topp/datastores/sbb_demo/featuretypes/" + inputLayer + ".xml", new Function<Document, Boolean>() {
 
 								@Override
 								public Boolean apply(Document doc) {
 									return true;
 								}
 							});
-							
+
 							if (!layerExists) {
 								System.out.println("Publishing layer failed");
 							}
 
 							String outputLayer = publishDialog.getFeatureTypeName().toLowerCase();
-							GeoserverRest.exec(GeoserverRest.GEOSERVER_URL + "rest/workspaces/topp/datastores/processing/featuretypes/" + outputLayer, "DELETE", null, null);
+							GeoserverRest.exec(GeoserverRest.GEOSERVER_URL + "rest/workspaces/topp/datastores/processing/featuretypes/" + outputLayer,
+									"DELETE", null, null);
 							String srs = layerSelectionDialog.getSrs();
 							monitor.worked(1);
 							String template = IOUtils.toString(getClass().getResource("/wps.template.xml"));
@@ -273,7 +297,7 @@ public class WPSView extends ViewPart {
 							GeoserverRest.exec(GeoserverRest.GEOSERVER_URL + "wps", "POST", "application/xml",
 									request);
 							monitor.worked(1);
-							
+
 							GeoserverRest.exec(GeoserverRest.GEOSERVER_URL + "rest/workspaces/topp/datastores/sbb_demo?recurse=true", "DELETE", null, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block

@@ -305,8 +305,9 @@ public class BranchTypeView extends ViewPart {
 			}
 		};
 		map.sendCommandASync(new NavComposite(Lists.newArrayList(centerCmd, scale)));
-		
-		site.getPage().activate(site.getPage().getActiveEditor());
+		if (site != null) {
+			site.getPage().activate(site.getPage().getActiveEditor());
+		}
 	}
 
 	private void makeActions() {

@@ -54,7 +54,7 @@ public class LayerSelectionDialog extends Dialog {
 		addLabel(comp, "Input Type:");
 		final Combo inputType = new Combo(comp, SWT.BORDER | SWT.READ_ONLY);
 		inputType.setItems(new String[]{"Upload Data", "Web Feature Server", "Database"});
-		inputType.select(0);
+		inputType.select(2);
 		final Composite contentPanel = new Composite (comp, SWT.NONE);
 		final StackLayout layout = new StackLayout ();
 		inputType.addSelectionListener(new SelectionListener() {

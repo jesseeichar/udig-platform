@@ -62,5 +62,23 @@
             requires="org.geotools.data.FeatureSource">
       </StyleEditorPage>
    </extension>
+   <extension
+         point="org.locationtech.udig.project.ui.tool">
+      <actionTool
+            class="com.camptocamp.sbb.AddPOI"
+            id="com.camptocamp.sbb.AddPOI"
+            name="Add Poi Layer"
+            onToolbar="true">
+         <enablement></enablement>
+      </actionTool>
+   </extension>
+   <extension
+         point="org.locationtech.udig.project.featureInterceptor">
+      <featureCreated
+            class="com.camptocamp.sbb.SbbPoiFeatureInterceptor1"
+            id="com.camptocamp.sbb.featureCreated1"
+            name="SBB Poi Feature Editor ">
+      </featureCreated>
+   </extension>
 
 </plugin>
