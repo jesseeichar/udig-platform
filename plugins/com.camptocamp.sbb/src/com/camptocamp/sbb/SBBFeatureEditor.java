@@ -36,7 +36,7 @@ public class SBBFeatureEditor extends Dialog {
 		addLabel(comp, "Type:");
 		this.typeCombo = new Combo(comp, SWT.BORDER | SWT.READ_ONLY);
 		this.typeCombo.setItems(new String[]{"Station", "Park and Ride", "Information"});
-		this.typeCombo.select(0);
+		this.typeCombo.select(2);
 		
 		return comp;
 	}

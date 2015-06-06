@@ -46,13 +46,6 @@
       </startup>
    </extension>
    <extension
-         point="org.locationtech.udig.project.layerInterceptor">
-      <layerAdded
-            class="com.camptocamp.sbb.GeogigConflictStyle"
-            id="com.camptocamp.sbb.layerAdded1">
-      </layerAdded>
-   </extension>
-   <extension
          point="org.locationtech.udig.style.sld.StyleEditorPage">
       <StyleEditorPage
             class="com.camptocamp.sbb.style.GeoserverStyleEditorPage"
