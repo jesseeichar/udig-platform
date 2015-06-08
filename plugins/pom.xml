@@ -87,6 +87,7 @@
     </profiles>
 
     <modules>
+        <module>com.camptocamp.sbb</module>
         <module>org.locationtech.udig.catalog.csw</module>
         <module>org.locationtech.udig.catalog.jgrass</module>
         <module>org.locationtech.udig.catalog.kml</module>

@@ -1,6 +1,7 @@
 package com.camptocamp.sbb;
 
 import java.awt.Color;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Set;
@@ -43,7 +44,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class BranchMerge {
-	private static final Color DARK_GREEN = new Color(9, 120, 6);
 	public final String MERGE_BRANCH_NAME = "INTERNAL_MERGE_BRANCH";
 
 	private final String ftName;
@@ -91,7 +91,9 @@ public class BranchMerge {
 			monitor.worked(1);
 
 			geoGig.command(CommitOp.class).setMessage("Merge Conflict Merge").call();
-			LineSymbolizer[] lineSym = Styling.createTrackSymbolizer(styleBuilder, Color.RED);
+			Stroke stroke = styleBuilder.createStroke(Color.BLACK, 2, new float[] { 5, 5 });
+			LineSymbolizer lineSym = styleBuilder.createLineSymbolizer(stroke);
+			
 			conflictRule = styleBuilder.createRule(lineSym);
 			org.opengis.filter.Id idFilter = filterFactory.id(conflictFids);
 			conflictRule.setFilter(idFilter);
@@ -99,7 +101,8 @@ public class BranchMerge {
 
 		Style conflictStyle = Styling.createTrackStyle();
 		if (conflictRule != null) {
-			conflictStyle.featureTypeStyles().get(0).rules().add(conflictRule);
+			List<Rule> rules = conflictStyle.featureTypeStyles().get(0).rules();
+			rules.add(conflictRule);
 		}
 		Function<Map, Void> zoomToFirstConflict = new Function<Map, Void>() {
 
@@ -118,13 +121,13 @@ public class BranchMerge {
 	}
 
 	private Style createMasterStyle(StyleBuilder styleBuilder) {
-		Stroke stroke = styleBuilder.createStroke(Color.BLUE, 2, new float[] { 5, 2 });
+		Stroke stroke = styleBuilder.createStroke(Color.YELLOW, 2, new float[] { 5, 2 });
 		LineSymbolizer sym = styleBuilder.createLineSymbolizer(stroke);
 		return styleBuilder.createStyle(sym);
 	}
 
 	private Style createRefStyle(StyleBuilder styleBuilder) {
-		Stroke stroke = styleBuilder.createStroke(DARK_GREEN, 2, new float[] { 1, 2 });
+		Stroke stroke = styleBuilder.createStroke(Color.BLACK, 2, new float[] { 5, 2 });
 		LineSymbolizer sym = styleBuilder.createLineSymbolizer(stroke);
 		return styleBuilder.createStyle(sym);
 	}
@@ -192,7 +195,12 @@ public class BranchMerge {
 			public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 				monitor.beginTask("Finish Merge", 5);
 				Map activeMap = (Map) ApplicationGIS.getActiveMap();
-				activeMap.sendCommandSync(new CommitCommand());
+				try {
+					activeMap.getEditManagerInternal().commitTransaction();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				CheckoutOp checkoutOp = getGeoGig().command(CheckoutOp.class);
 				checkoutOp.setForce(true);
 				checkoutOp.setSource("master");
